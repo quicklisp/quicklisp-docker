@@ -1,19 +1,28 @@
 FROM debian:latest
 
-RUN adduser --system quicklisp
-RUN chsh --shell /bin/bash quicklisp
 RUN apt-get update
-RUN apt-get -y install wget git build-essential sudo sbcl
-RUN echo "quicklisp ALL = NOPASSWD: ALL" > /etc/sudoers.d/quicklisp
+RUN apt-get -y install wget
 
-ENV LANG=C.UTF-8
-
+# Install the not-in-debian prerequisites, built with checkinstall
 RUN mkdir /build
 WORKDIR /build
 RUN wget https://www.quicklisp.org/quicklisp-controller/packages.tar
 RUN tar xvf packages.tar
 RUN dpkg -i packages/*.deb
 
+# Install the big list of known prerequisites
+COPY debian-9-packages.txt /build
+RUN apt-get -y install $(cat debian-9-packages.txt)
+
+
+# Other one-off requirements
+RUN apt-get -y install git build-essential sudo sbcl emacs-nox
+
+# Create quicklisp user
+RUN adduser --shell /bin/bash --uid 1000 --system quicklisp
+RUN echo "quicklisp ALL = NOPASSWD: ALL" > /etc/sudoers.d/quicklisp
+
+# Install quicklisp and quicklisp-controller prerequisites
 RUN wget https://beta.quicklisp.org/quicklisp.lisp
 RUN su quicklisp -c 'sbcl --noinform --no-userinit --no-sysinit --non-interactive --load /build/quicklisp.lisp --eval "(quicklisp-quickstart:install)"'
 WORKDIR /home/quicklisp/quicklisp/local-projects
@@ -22,10 +31,20 @@ RUN git clone https://github.com/xach/commando.git
 RUN git clone https://github.com/xach/githappy.git
 RUN git clone https://github.com/quicklisp/quicklisp-controller.git
 
-WORKDIR /home/quicklisp/quicklisp/local-projects/quicklisp-controller/debian-setup
-RUN test -f debian-9-packages.txt
-RUN apt-get -y install $(cat debian-9-packages.txt)
-
+# Don't leave it around
 RUN rm -rf /build
+WORKDIR /
 
+# Other setup
+ENV LANG=C.UTF-8
+
+RUN mkdir /home/quicklisp/quicklisp-controller
+RUN chown quicklisp /home/quicklisp/quicklisp-controller
+RUN su quicklisp -c 'sbcl --noinform --no-userinit --no-sysinit --non-interactive --load $HOME/quicklisp/setup.lisp --eval "(ql-util:without-prompting (ql:add-to-init-file))"'
+RUN su quicklisp -c 'ln -s ~/quicklisp-projects ~/quicklisp-controller/projects'
+
+# Warm the fasl cache of quicklisp-controller
+RUN su quicklisp -c 'sbcl --no-userinit --no-sysinit --non-interactive --load $HOME/quicklisp/setup.lisp --eval "(ql:quickload :quicklisp-controller)"'
+
+# Start as quicklisp, not root
 CMD su -l quicklisp
