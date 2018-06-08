@@ -31,6 +31,9 @@ RUN git clone https://github.com/xach/commando.git
 RUN git clone https://github.com/xach/githappy.git
 RUN git clone https://github.com/quicklisp/quicklisp-controller.git
 
+# This inhibits prompting for password on missing/private repo URLs
+RUN su quicklisp -c 'git config --global core.askpass echo'
+
 # Don't leave it around
 RUN rm -rf /build
 WORKDIR /
