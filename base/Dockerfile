@@ -42,12 +42,18 @@ WORKDIR /
 ENV LANG=C.UTF-8
 
 RUN mkdir /home/quicklisp/quicklisp-controller
-RUN chown quicklisp /home/quicklisp/quicklisp-controller
+RUN chown -R quicklisp /home/quicklisp/quicklisp-controller /home/quicklisp/quicklisp
 RUN su quicklisp -c 'sbcl --noinform --no-userinit --no-sysinit --non-interactive --load $HOME/quicklisp/setup.lisp --eval "(ql-util:without-prompting (ql:add-to-init-file))"'
 RUN su quicklisp -c 'ln -s ~/quicklisp-projects ~/quicklisp-controller/projects'
 
 # Warm the fasl cache of quicklisp-controller
 RUN su quicklisp -c 'sbcl --no-userinit --no-sysinit --non-interactive --load $HOME/quicklisp/setup.lisp --eval "(ql:quickload :quicklisp-controller)"'
+
+# Required binaries
+WORKDIR /home/quicklisp
+RUN su quicklisp -c 'mkdir /home/quicklisp/bin'
+RUN su quicklisp -c 'sbcl --non-interactive --eval "(ql:quickload :buildapp)" --eval "(buildapp:build-buildapp \"~/bin/buildapp\")"'
+RUN su quicklisp -c 'sbcl --non-interactive --eval "(ql:quickload :quicklisp-controller)" --eval "(quicklisp-controller::rebuild-tools)"'
 
 # Start as quicklisp, not root
 CMD su -l quicklisp
