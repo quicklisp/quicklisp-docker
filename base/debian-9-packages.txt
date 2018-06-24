@@ -144,3 +144,5 @@ libqt4-dev
 libsmokeqtgui4-3
 libssl-dev
 libsnappy-dev
+libzmq3-dev
+libsdl2-mixer-dev
