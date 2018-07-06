@@ -1,0 +1,8 @@
+;;; -*- Emacs-Lisp -*-
+
+(ido-mode 1)
+(when (file-exists-p "~/quicklisp/slime-helper.el")
+  (load "~/quicklisp/slime-helper.el"))
+(setq inferior-lisp-program "sbcl")
+
+    
