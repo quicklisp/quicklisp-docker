@@ -35,7 +35,7 @@ RUN git clone https://github.com/xach/githappy.git
 RUN git clone https://github.com/quicklisp/quicklisp-controller.git --depth 10
 WORKDIR /home/quicklisp/quicklisp/local-projects/quicklisp-controller
 RUN git fetch origin 
-RUN git reset --hard ffb2a3c9
+RUN git reset --hard f39f87e
 
 # This inhibits prompting for password on missing/private repo URLs
 RUN su quicklisp -c 'git config --global core.askpass echo'
