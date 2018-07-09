@@ -44,6 +44,7 @@ RUN su quicklisp -c 'git config --global core.askpass echo'
 WORKDIR /build
 RUN git clone https://github.com/sbcl/sbcl.git
 WORKDIR /build/sbcl
+RUN git checkout sbcl-1.4.6
 RUN sh make.sh --fancy
 RUN sh install.sh
 
