@@ -1,3 +1,5 @@
+python-matplotlib
+python3-matplotlib
 swig
 libopenmpi-dev
 libusb-dev
