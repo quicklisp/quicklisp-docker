@@ -80,4 +80,5 @@ RUN su quicklisp -c 'echo export PATH=$PATH:$HOME/bin >> ~/.profile'
 RUN su quicklisp -c 'echo export LANG=C.UTF-8 >> ~/.profile'
 
 # Start as quicklisp, not root
-CMD su -l quicklisp
+USER quicklisp
+
