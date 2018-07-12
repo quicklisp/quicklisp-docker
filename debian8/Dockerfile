@@ -20,11 +20,17 @@ RUN dpkg -i packages/*.deb
 RUN apt-get -y install git build-essential sudo sbcl emacs-nox apt-file
 RUN apt-file update
 
+# This gross hack makes cl-async build. Would be better to fix the
+# library situation
+WORKDIR /usr/lib/x86_64-linux-gnu
+RUN ln -s libcrypto.so.1.0.0 libcrypto.so.1.0.2
+
 # Create quicklisp user
 RUN adduser --shell /bin/bash --uid 1000 --system quicklisp
 RUN echo "quicklisp ALL = NOPASSWD: ALL" > /etc/sudoers.d/quicklisp
 
 # Install quicklisp and quicklisp-controller prerequisites
+WORKDIR /build
 RUN wget https://beta.quicklisp.org/quicklisp.lisp
 RUN su quicklisp -c 'sbcl --noinform --no-userinit --no-sysinit --non-interactive --load /build/quicklisp.lisp --eval "(quicklisp-quickstart:install)"'
 WORKDIR /home/quicklisp/quicklisp/local-projects
@@ -35,7 +41,7 @@ RUN git clone https://github.com/xach/githappy.git
 RUN git clone https://github.com/quicklisp/quicklisp-controller.git --depth 10
 WORKDIR /home/quicklisp/quicklisp/local-projects/quicklisp-controller
 RUN git fetch origin 
-RUN git reset --hard f39f87e
+RUN git reset --hard 2fc961
 
 # This inhibits prompting for password on missing/private repo URLs
 RUN su quicklisp -c 'git config --global core.askpass echo'
