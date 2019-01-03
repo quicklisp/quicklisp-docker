@@ -148,3 +148,4 @@ libqt4-dev
 libsmokeqtgui4-3
 libssl-dev
 libsnappy-dev
+xsel
