@@ -1,8 +1,9 @@
 ;;; -*- Emacs-Lisp -*-
 
-(ido-mode 1)
-(when (file-exists-p "~/quicklisp/slime-helper.el")
-  (load "~/quicklisp/slime-helper.el"))
-(setq inferior-lisp-program "sbcl")
-
-    
+(defun xach ()
+  (interactive)
+  (ido-mode 1)
+  (when (file-exists-p "~/quicklisp/slime-helper.el")
+    (load "~/quicklisp/slime-helper.el"))
+  (setq inferior-lisp-program "sbcl")
+  (global-set-key (kbd "C-c s") 'slime-selector))

@@ -3,12 +3,14 @@ FROM debian:8
 RUN apt-get update
 RUN apt-get -y install wget
 
+COPY tools/ /usr/local/bin
 
 RUN mkdir /build
 WORKDIR /build
 
 # Install the big list of known prerequisites
 COPY debian-8-packages.txt /build
+RUN apt-get update --fix-missing
 RUN apt-get -y install $(cat debian-8-packages.txt)
 
 # Install the not-in-debian prerequisites, built with checkinstall
@@ -20,11 +22,17 @@ RUN dpkg -i packages/*.deb
 RUN apt-get -y install git build-essential sudo sbcl emacs-nox apt-file
 RUN apt-file update
 
+# This gross hack makes cl-async build. Would be better to fix the
+# library situation
+WORKDIR /usr/lib/x86_64-linux-gnu
+RUN ln -s libcrypto.so.1.0.0 libcrypto.so.1.0.2
+
 # Create quicklisp user
 RUN adduser --shell /bin/bash --uid 1000 --system quicklisp
 RUN echo "quicklisp ALL = NOPASSWD: ALL" > /etc/sudoers.d/quicklisp
 
 # Install quicklisp and quicklisp-controller prerequisites
+WORKDIR /build
 RUN wget https://beta.quicklisp.org/quicklisp.lisp
 RUN su quicklisp -c 'sbcl --noinform --no-userinit --no-sysinit --non-interactive --load /build/quicklisp.lisp --eval "(quicklisp-quickstart:install)"'
 WORKDIR /home/quicklisp/quicklisp/local-projects
@@ -34,8 +42,7 @@ RUN git clone https://github.com/xach/githappy.git
 
 RUN git clone https://github.com/quicklisp/quicklisp-controller.git --depth 10
 WORKDIR /home/quicklisp/quicklisp/local-projects/quicklisp-controller
-RUN git fetch origin 
-RUN git reset --hard ffb2a3c9
+RUN fetchcommit.sh 53ed840fa14ff546ed8615f9b8badb3be265698f
 
 # This inhibits prompting for password on missing/private repo URLs
 RUN su quicklisp -c 'git config --global core.askpass echo'
@@ -44,6 +51,7 @@ RUN su quicklisp -c 'git config --global core.askpass echo'
 WORKDIR /build
 RUN git clone https://github.com/sbcl/sbcl.git
 WORKDIR /build/sbcl
+RUN fetchcommit.sh sbcl-1.4.10
 RUN sh make.sh --fancy
 RUN sh install.sh
 
@@ -76,7 +84,9 @@ RUN su quicklisp -c 'sbcl --non-interactive --eval "(ql:quickload :quicklisp-con
 
 # Make buildapp &c visible in ~/bin
 RUN su quicklisp -c 'echo export PATH=$PATH:$HOME/bin >> ~/.profile'
+RUN su quicklisp -c 'echo export PATH=$PATH:$HOME/bin >> ~/.bashrc'
 RUN su quicklisp -c 'echo export LANG=C.UTF-8 >> ~/.profile'
 
 # Start as quicklisp, not root
-CMD su -l quicklisp
+USER quicklisp
+
